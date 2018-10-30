@@ -1,0 +1,34 @@
+[global_tags]
+project = "Projectname"
+
+[agent]
+hostname = "agent_hostname"
+
+[database]
+type = "influxdb"
+host = "scheme://ip:port"
+db = "ping"
+measurement = "ping"
+user = "ping"
+pass = "pong"
+
+[[probe]]
+name = "icmp"
+retries = 3
+packet = 56
+
+[[group]]
+name = "test1"
+    [[group.host]]
+	ip = "8.8.4.4"
+	fqdn = "ns1.google.com"
+
+    [[group.host]]
+	ip = "8.8.8.8"
+	fqdn = "ns2.google.com"
+
+[[group]]
+name = "test2"
+    [[group.host]]
+	ip = "ip"
+	fqdn = "hostname"
