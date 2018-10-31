@@ -1,10 +1,10 @@
 [global_tags]
 project = "Projectname"
-
+output ="influx"
 [agent]
 hostname = "agent_hostname"
 
-[database]
+[database.influx]
 type = "influxdb"
 host = "scheme://ip:port"
 db = "ping"
@@ -12,8 +12,7 @@ measurement = "ping"
 user = "ping"
 pass = "pong"
 
-[[probe]]
-name = "icmp"
+[probe.icmp]
 retries = 3
 packet = 56
 
@@ -22,13 +21,15 @@ name = "test1"
     [[group.host]]
 	ip = "8.8.4.4"
 	fqdn = "ns1.google.com"
-
+	probe = "icmp"
     [[group.host]]
 	ip = "8.8.8.8"
 	fqdn = "ns2.google.com"
+	probe = "icmp"
 
 [[group]]
 name = "test2"
     [[group.host]]
 	ip = "ip"
 	fqdn = "hostname"
+	probe = "icmp"
