@@ -13,9 +13,9 @@ user = "ping"
 pass = "pong"
 
 [probe.icmp]
-retries = 3
+retries = 5
 packet = 56
-
+step = 60
 [[group]]
 name = "test1"
     [[group.host]]

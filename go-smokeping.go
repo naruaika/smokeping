@@ -17,7 +17,7 @@ import (
 //    "bufio"
 //    "os/exec"
 //    "strings"
-//    "time"
+    "time"
 //    "strconv"
 )
 // Usage ------------------------------------------------------------------------------------------------
@@ -68,6 +68,7 @@ type group struct {
 type probe struct {
     Retries int
     Packet int
+    Step int64
 }
 
 
@@ -103,31 +104,77 @@ func GetProbe(config Config, probe_name string) (probe, error) {
 }
 
 // ping host --------------------------------------------------------------------------
-func PingHost(host string, retries int, packetsize int) {
-    pinger, err := ping.NewPinger(host)
-    if err != nil {
-        log.Print(err)
-	return
+func PingHost(h host,p probe, result chan string, verbose bool) {
+    for {
+	pinger, err := ping.NewPinger(h.Ip)
+	    if err != nil {
+    		log.Print(err)
+		return
+	    }
+	pinger.SetPrivileged(true)
+	pinger.Count = p.Retries
+	pinger.Size = p.Packet
+
+        start := time.Now().Unix()
+    	pinger.Run() // blocks until finished
+
+	end := time.Now().Unix()
+	exectime := end - start
+	if verbose {
+	    log.Printf("Host %s - start time %d, stop time:%d, cycle time:%d",h.Fqdn,start,end,exectime)
+	}
+
+	stats := pinger.Statistics()
+	if verbose {	
+	    log.Printf("Result: Host:%s Addr:%s PacketsSent:%d PacketsRecv:%d PacketLoss:%f",h.Fqdn, stats.Addr, stats.PacketsSent, stats.PacketsRecv, stats.PacketLoss)
+	}
+	// Print result to channel
+	result <- fmt.Sprintf("Unixtime:%d Host:%s Ip:%s PacketsSent:%d PacketsRecv:%d PacketLoss:%f MinRtt:%f ms MaxRtt:%f ms AvgRtt:%f ms",end, h.Fqdn, stats.Addr, stats.PacketsSent, stats.PacketsRecv, stats.PacketLoss, stats.MinRtt.Seconds()*1000, stats.MaxRtt.Seconds()*1000, stats.AvgRtt.Seconds()*1000)
+
+	// Check if execution time is smaller then step time	
+	sleeptime := p.Step-exectime
+	if sleeptime < 0 {
+	    log.Printf("Step time %d is too small. Increase it",p.Step)
+	    sleeptime = 1
+	}
+
+	if verbose {
+	    log.Printf("Sleep %d seconds", sleeptime)
+	}
+        time.Sleep(time.Duration(sleeptime) * time.Second)
+
     }
-    pinger.SetPrivileged(true)
-    pinger.Count = retries
-    pinger.Run() // blocks until finished
-    stats := pinger.Statistics()
-    fmt.Printf("%v",stats)
 }
 
+//-------------------------------------------------------------------------------------------------------
+// Get result from channel
+func GetResultFromChannel(result chan string, verbose bool) {
+    for {
+	stats := <- result
+	fmt.Printf("Result: %v\n",stats)
+	time.Sleep(10*time.Second)    
+    }
+}
 //-------------------------------------------------------------------------------------------------------
 
 func main() { 
 
-    var config Config
+    var (
+      config Config
+      verbose bool
+    )
 
-    configfile, _ := GetCommandLineArgs()
+// Get command line arguments
+    configfile, verbose := GetCommandLineArgs()
  
+// Read config file
     if _, err := toml.DecodeFile(configfile, &config); err != nil {
 	fmt.Println(err)
 	return
     }
+
+// Run pinger instances
+    pinger_output := make(chan string, 1024)
 
     for _,g := range config.Groups {
         for _, h := range g.Hosts {
@@ -136,11 +183,15 @@ func main() {
 		log.Printf("%s for host %s",err.Error(),h.Fqdn)
 		continue
 	    }
+	
 	    log.Printf("Probing host %s(%s) with probe %s\n", h.Fqdn, h.Ip, h.Probe)
 	    
-		if (h.Probe == "icmp") {
-		    PingHost(h.Ip, probe.Retries, probe.Packet)
-		}
+	    if (h.Probe == "icmp") {
+	        go PingHost(h, probe, pinger_output, verbose)
+	    }
 	}
     }
+    
+    GetResultFromChannel(pinger_output,verbose)
+// End
 }
