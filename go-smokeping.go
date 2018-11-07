@@ -6,7 +6,6 @@ package main
 // Import section ----------------------------------------------------------------------------------------
 
 import (  
-//    "github.com/influxdata/influxdb/client/v2"
     "github.com/BurntSushi/toml"
     "fmt"
     "flag"
@@ -136,7 +135,16 @@ func main() {
 // Run database outputs
    switch config.Global_tags.Output {
     case "influx":
-	go OutputInfluxDb(probe_output, verbose)
+	go OutputInfluxDb(config.Global_tags.Project,
+			  config.Agent.Hostname, 
+			  config.Database["influx"].Host,
+			  config.Database["influx"].User,
+			  config.Database["influx"].Pass,
+			  config.Database["influx"].Db,
+			  config.Database["influx"].Measurement,
+			  config.Database["influx"].Step,
+			  probe_output, verbose)
+
    }
 
 // Run probes
