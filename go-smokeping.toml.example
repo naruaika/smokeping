@@ -5,12 +5,12 @@ output ="influx"
 hostname = "agent_hostname"
 
 [database.influx]
-type = "influxdb"
 host = "scheme://ip:port"
 db = "ping"
 measurement = "ping"
 user = "ping"
 pass = "pong"
+step = 60
 
 [probe.icmp]
 retries = 5

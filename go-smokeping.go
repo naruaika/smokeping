@@ -1,6 +1,6 @@
 // 
 // Written by Romanenko Denys <romanenkodenys@gmail.com>
-//  
+//
 package main
 
 // Import section ----------------------------------------------------------------------------------------
@@ -8,16 +8,16 @@ package main
 import (  
 //    "github.com/influxdata/influxdb/client/v2"
     "github.com/BurntSushi/toml"
-    "github.com/sparrc/go-ping"
     "fmt"
     "flag"
     "errors"
     "log"
-//    "os"
+    "os/signal"
+    "os"
+    "syscall"
 //    "bufio"
 //    "os/exec"
 //    "strings"
-    "time"
 //    "strconv"
 )
 // Usage ------------------------------------------------------------------------------------------------
@@ -46,12 +46,12 @@ type agentInfo struct {
 }
 
 type databaseConnector struct {
-    Type string
     Host string
     Db string
     Measurement string
     User string
     Pass string
+    Step int
 }
   
 type host struct {
@@ -68,7 +68,7 @@ type group struct {
 type probe struct {
     Retries int
     Packet int
-    Step int64
+    Step int
 }
 
 
@@ -102,57 +102,14 @@ func GetProbe(config Config, probe_name string) (probe, error) {
 	return pr,errors.New("Probe "+probe_name+" not found")
     }
 }
-
-// ping host --------------------------------------------------------------------------
-func PingHost(h host,p probe, result chan string, verbose bool) {
-    for {
-	pinger, err := ping.NewPinger(h.Ip)
-	    if err != nil {
-    		log.Print(err)
-		return
-	    }
-	pinger.SetPrivileged(true)
-	pinger.Count = p.Retries
-	pinger.Size = p.Packet
-
-        start := time.Now().Unix()
-    	pinger.Run() // blocks until finished
-
-	end := time.Now().Unix()
-	exectime := end - start
-	if verbose {
-	    log.Printf("Host %s - start time %d, stop time:%d, cycle time:%d",h.Fqdn,start,end,exectime)
-	}
-
-	stats := pinger.Statistics()
-	if verbose {	
-	    log.Printf("Result: Host:%s Addr:%s PacketsSent:%d PacketsRecv:%d PacketLoss:%f",h.Fqdn, stats.Addr, stats.PacketsSent, stats.PacketsRecv, stats.PacketLoss)
-	}
-	// Print result to channel
-	result <- fmt.Sprintf("Unixtime:%d Host:%s Ip:%s PacketsSent:%d PacketsRecv:%d PacketLoss:%f MinRtt:%f ms MaxRtt:%f ms AvgRtt:%f ms",end, h.Fqdn, stats.Addr, stats.PacketsSent, stats.PacketsRecv, stats.PacketLoss, stats.MinRtt.Seconds()*1000, stats.MaxRtt.Seconds()*1000, stats.AvgRtt.Seconds()*1000)
-
-	// Check if execution time is smaller then step time	
-	sleeptime := p.Step-exectime
-	if sleeptime < 0 {
-	    log.Printf("Step time %d is too small. Increase it",p.Step)
-	    sleeptime = 1
-	}
-
-	if verbose {
-	    log.Printf("Sleep %d seconds", sleeptime)
-	}
-        time.Sleep(time.Duration(sleeptime) * time.Second)
-
-    }
-}
-
 //-------------------------------------------------------------------------------------------------------
-// Get result from channel
-func GetResultFromChannel(result chan string, verbose bool) {
-    for {
-	stats := <- result
-	fmt.Printf("Result: %v\n",stats)
-	time.Sleep(10*time.Second)    
+// Signal handler
+func SignalHandler(verbose bool) {
+    c := make(chan os.Signal)
+    signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+    <-c
+    if verbose {
+        log.Print("Got exiting signal")
     }
 }
 //-------------------------------------------------------------------------------------------------------
@@ -173,9 +130,16 @@ func main() {
 	return
     }
 
-// Run pinger instances
-    pinger_output := make(chan string, 1024)
+// Create channels
+    probe_output := make(chan string, 1024)
 
+// Run database outputs
+   switch config.Global_tags.Output {
+    case "influx":
+	go OutputInfluxDb(probe_output, verbose)
+   }
+
+// Run probes
     for _,g := range config.Groups {
         for _, h := range g.Hosts {
 	    probe , err:= GetProbe(config, h.Probe)
@@ -183,15 +147,15 @@ func main() {
 		log.Printf("%s for host %s",err.Error(),h.Fqdn)
 		continue
 	    }
-	
-	    log.Printf("Probing host %s(%s) with probe %s\n", h.Fqdn, h.Ip, h.Probe)
-	    
-	    if (h.Probe == "icmp") {
-	        go PingHost(h, probe, pinger_output, verbose)
+	    switch h.Probe {
+		case "icmp":
+	    	    go PingProbe(g.Name, h.Fqdn, h.Ip, probe.Retries, probe.Packet, probe.Step, probe_output, verbose)
 	    }
 	}
     }
     
-    GetResultFromChannel(pinger_output,verbose)
+//  Check system signals    
+    SignalHandler(verbose)
+
 // End
 }
