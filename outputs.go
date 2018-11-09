@@ -13,19 +13,20 @@ import (
 
 //-------------------------------------------------------------------------------------------------------
 // Get result from channel
-func OutputInfluxDb(project string, agent_hostname string, scheme string, username string, password string, db string, measurement string, step int, result chan string, verbose bool) {
+func OutputInfluxDb(project string, agent_hostname string, influxdb databaseConnector, result chan string, verbose bool) {
 
     var (
 	unixtime int64
 	group string
+	measurement string
 	fqdn string
 	ip string
 	sent int
 	recv int
-	loss float32
-	min float32
-	max float32
-	avg float32
+	loss float64
+	min float64
+	max float64
+	avg float64
 	batchpoint client.BatchPoints
 	addpoints int
     )
@@ -33,8 +34,8 @@ func OutputInfluxDb(project string, agent_hostname string, scheme string, userna
     for {
 	select {
 	    case stats:= <- result:
-
-		fmt.Sscanf(stats,"%d %s %s %s %d %d %f %f %f %f",&unixtime,&group,&fqdn,&ip,&sent,&recv,&loss,&min,&max,&avg)
+	    	fmt.Sscanf(stats,"%d %s %s %s %s %d %d %f %f %f %f",&unixtime,&group,&measurement,&fqdn,&ip,&sent,&recv,&loss,&min,&max,&avg)
+		log.Print(stats)
 	        // Create fields and tags
 		tags:= map[string]string{
         	    "fqdn": fqdn,
@@ -79,9 +80,9 @@ func OutputInfluxDb(project string, agent_hostname string, scheme string, userna
 		
 		    // Open InfluxDb connection		
 		    infdbcon, err := client.NewHTTPClient(client.HTTPConfig{
-    			Addr:     scheme,
-    			Username: username,
-    			Password: password,
+    			Addr:     influxdb.Host,
+    			Username: influxdb.User,
+    			Password: influxdb.Pass,
 		    })
 
 		    if err != nil {
@@ -102,17 +103,17 @@ func OutputInfluxDb(project string, agent_hostname string, scheme string, userna
 
         	// Generate new batchpoint structure
 		batchpoint, _ = client.NewBatchPoints(client.BatchPointsConfig{
-		    Database: db,
+		    Database: influxdb.Db,
 		    Precision: "",
 		})
 		
 		addpoints = 0
 
 		if verbose {
-		    log.Printf("InfluxDb: Sleep %d seconds", step)
+		    log.Printf("InfluxDb: Sleep %d seconds", influxdb.Step)
 		}
 
-	        time.Sleep(time.Duration(step)*time.Second)    
+	        time.Sleep(time.Duration(influxdb.Step)*time.Second)
 	}
     }
 }

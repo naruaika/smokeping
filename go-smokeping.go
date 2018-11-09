@@ -47,7 +47,6 @@ type agentInfo struct {
 type databaseConnector struct {
     Host string
     Db string
-    Measurement string
     User string
     Pass string
     Step int
@@ -66,8 +65,9 @@ type group struct {
 
 type probe struct {
     Retries int
-    Packet int
     Step int
+    Cmd string
+    Args []string
 }
 
 
@@ -135,17 +135,8 @@ func main() {
 // Run database outputs
    switch config.Global_tags.Output {
     case "influx":
-	go OutputInfluxDb(config.Global_tags.Project,
-			  config.Agent.Hostname, 
-			  config.Database["influx"].Host,
-			  config.Database["influx"].User,
-			  config.Database["influx"].Pass,
-			  config.Database["influx"].Db,
-			  config.Database["influx"].Measurement,
-			  config.Database["influx"].Step,
-			  probe_output, verbose)
-
-   }
+	go OutputInfluxDb(config.Global_tags.Project, config.Agent.Hostname, config.Database["influx"], probe_output, verbose)
+    }
 
 // Run probes
     for _,g := range config.Groups {
@@ -157,7 +148,9 @@ func main() {
 	    }
 	    switch h.Probe {
 		case "icmp":
-	    	    go PingProbe(g.Name, h.Fqdn, h.Ip, probe.Retries, probe.Packet, probe.Step, probe_output, verbose)
+	    	    go PingProbe(g.Name, h, probe, probe_output, verbose)
+		case "fping":
+		    go FPingProbe(g.Name, h, probe, probe_output, verbose)
 	    }
 	}
     }
