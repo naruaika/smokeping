@@ -1,0 +1,13 @@
+[Unit]
+Description=Infping.service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/local/sbin/go-smokeping -config /usr/local/etc/go-smokeping.toml
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
