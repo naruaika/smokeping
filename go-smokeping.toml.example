@@ -7,25 +7,30 @@ hostname = "agent_hostname"
 [database.influx]
 host = "scheme://ip:port"
 db = "ping"
-measurement = "ping"
 user = "ping"
 pass = "pong"
 step = 10
 
 [probe.icmp]
 retries = 5
-packet = 56
 step = 10
+
+[probe.fping]
+step = 60
+cmd = "/usr/bin/fping"
+args = ["-c", "5", "-q"]
+
 [[group]]
 name = "test1"
     [[group.host]]
 	ip = "8.8.4.4"
 	fqdn = "ns1.google.com"
 	probe = "icmp"
+
     [[group.host]]
 	ip = "8.8.8.8"
 	fqdn = "ns2.google.com"
-	probe = "icmp"
+	probe = "fping"
 
 [[group]]
 name = "test2"
