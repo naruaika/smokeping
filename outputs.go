@@ -35,7 +35,9 @@ func OutputInfluxDb(project string, agent_hostname string, influxdb databaseConn
 	select {
 	    case stats:= <- result:
 	    	fmt.Sscanf(stats,"%d %s %s %s %s %d %d %f %f %f %f",&unixtime,&group,&measurement,&fqdn,&ip,&sent,&recv,&loss,&min,&max,&avg)
-		log.Print(stats)
+		if verbose {
+		    log.Print(stats)
+		}
 	        // Create fields and tags
 		tags:= map[string]string{
         	    "fqdn": fqdn,

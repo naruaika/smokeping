@@ -125,7 +125,7 @@ func main() {
  
 // Read config file
     if _, err := toml.DecodeFile(configfile, &config); err != nil {
-	fmt.Println(err)
+	log.Print(err)
 	return
     }
 
