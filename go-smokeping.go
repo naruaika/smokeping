@@ -139,22 +139,9 @@ func main() {
     }
 
 // Run probes
-    for _,g := range config.Groups {
-        for _, h := range g.Hosts {
-	    probe , err:= GetProbe(config, h.Probe)
-	    if err != nil {
-		log.Printf("%s for host %s",err.Error(),h.Fqdn)
-		continue
-	    }
-	    switch h.Probe {
-		case "icmp":
-	    	    go PingProbe(g.Name, h, probe, probe_output, verbose)
-		case "fping":
-		    go FPingProbe(g.Name, h, probe, probe_output, verbose)
-	    }
-	}
-    }
-    
+    go PingProbe(config, probe_output, verbose)
+    go FPingProbe(config, probe_output, verbose)
+
 //  Check system signals    
     SignalHandler(verbose)
 

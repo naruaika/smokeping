@@ -16,7 +16,7 @@ retries = 5
 step = 10
 
 [probe.fping]
-step = 60
+step = 10
 cmd = "/usr/bin/fping"
 args = ["-c", "5", "-q"]
 
@@ -25,16 +25,16 @@ name = "test1"
     [[group.host]]
 	ip = "8.8.4.4"
 	fqdn = "ns1.google.com"
-	probe = "icmp"
+	probe = "fping"
 
     [[group.host]]
 	ip = "8.8.8.8"
 	fqdn = "ns2.google.com"
-	probe = "fping"
+	probe = "icmp"
 
 [[group]]
 name = "test2"
     [[group.host]]
-	ip = "ip"
-	fqdn = "hostname"
+	ip = "1.1.1.1"
+	fqdn = "ns.cloudflare.com"
 	probe = "icmp"

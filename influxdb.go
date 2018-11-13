@@ -36,7 +36,7 @@ func OutputInfluxDb(project string, agent_hostname string, influxdb databaseConn
 	    case stats:= <- result:
 	    	fmt.Sscanf(stats,"%d %s %s %s %s %d %d %f %f %f %f",&unixtime,&group,&measurement,&fqdn,&ip,&sent,&recv,&loss,&min,&max,&avg)
 		if verbose {
-		    log.Print(stats)
+		    log.Printf("INFLUXDB: Receive %s",stats)
 		}
 	        // Create fields and tags
 		tags:= map[string]string{
@@ -69,7 +69,7 @@ func OutputInfluxDb(project string, agent_hostname string, influxdb databaseConn
 		batchpoint.AddPoint(pt)
 		addpoints ++
 		if verbose {
-			log.Printf("InfluxDb: %v",pt)
+			log.Printf("INFLUXDB: Batchpoint %v",pt)
 		}
 
 	    default:
@@ -77,7 +77,7 @@ func OutputInfluxDb(project string, agent_hostname string, influxdb databaseConn
 		// if we have addpoints
 		if addpoints>0 {
 		    if verbose {
-			log.Printf("InfluxDb: Writing %d points",addpoints)
+			log.Printf("INFLUXDB: Writing %d points",addpoints)
 		    }
 		
 		    // Open InfluxDb connection		
@@ -112,7 +112,7 @@ func OutputInfluxDb(project string, agent_hostname string, influxdb databaseConn
 		addpoints = 0
 
 		if verbose {
-		    log.Printf("InfluxDb: Sleep %d seconds", influxdb.Step)
+		    log.Printf("INFLUXDB: Sleep %d seconds", influxdb.Step)
 		}
 
 	        time.Sleep(time.Duration(influxdb.Step)*time.Second)
