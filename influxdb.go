@@ -106,7 +106,7 @@ func OutputInfluxDb(project string, agent_hostname string, influxdb databaseConn
         	// Generate new batchpoint structure
 		batchpoint, _ = client.NewBatchPoints(client.BatchPointsConfig{
 		    Database: influxdb.Db,
-		    Precision: "",
+		    Precision: "s",
 		})
 		
 		addpoints = 0
