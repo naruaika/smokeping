@@ -2,8 +2,9 @@ Go Smokeping
 Its reincarnation of Tobias Oetiker SmokePing daemon, written on Go.
 
 Usage: go-smokeping -config CONFIGFILE.toml [-verbose]
-CONFIGFILE.toml format:
 
+CONFIGFILE.toml format:
+```
 [global_tags]
 project = "myproject"                          # Project tag to add to records       
 output ="influx"                               # output db format
@@ -46,12 +47,12 @@ name = "cloudflare"
     fqdn = "ns1.cloudflare.com"            
     ip = "1.1.1.1"
     probe = "icmp"
-
-
+```
 Currently go-smokeping support only 2 probes: internal icmp and external fping. Output supported only to influxdb.
 To run go-smokeping on systemd based systems put go-smokeping.service file to /etc/systemd/system and run:
+```
 systemctl daemon-reload
 systemctl enable go-smokeping
 systemctl start go-smokeping
-
+```
 For viewing stats in grafana import dashboard from file Smokeping.json
