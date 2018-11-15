@@ -69,7 +69,7 @@ func OutputInfluxDb(project string, agent_hostname string, influxdb databaseConn
 		batchpoint.AddPoint(pt)
 		addpoints ++
 		if verbose {
-			log.Printf("INFLUXDB: Batchpoint %v",pt)
+			log.Printf("INFLUXDB: [%s] Batchpoint %v",time.Unix(unixtime,0).String(),pt)
 		}
 
 	    default:

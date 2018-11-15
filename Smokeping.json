@@ -46,7 +46,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1542190858212,
+  "iteration": 1542267155435,
   "links": [],
   "panels": [
     {
@@ -91,9 +91,20 @@
       "repeatDirection": "v",
       "seriesOverrides": [
         {
-          "alias": "loss",
+          "alias": "Loss",
           "bars": true,
-          "color": "#bf1b00"
+          "color": "#bf1b00",
+          "yaxis": 2
+        },
+        {
+          "alias": "Max",
+          "fillBelowTo": "Min",
+          "lines": false
+        },
+        {
+          "alias": "Avg",
+          "fillBelowTo": "Min",
+          "lines": false
         }
       ],
       "spaceLength": 10,
@@ -101,51 +112,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "min",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            }
-          ],
-          "hide": true,
-          "measurement": "fping",
-          "orderByTime": "ASC",
-          "policy": "autogen",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "min"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "min"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "agent",
-              "operator": "=~",
-              "value": "/^$agent$/"
-            },
-            {
-              "condition": "AND",
-              "key": "fqdn",
-              "operator": "=~",
-              "value": "/^$host$/"
-            }
-          ]
-        },
-        {
-          "alias": "avg",
+          "alias": "Avg",
           "groupBy": [
             {
               "params": [
@@ -155,16 +122,15 @@
             },
             {
               "params": [
-                "none"
+                "null"
               ],
               "type": "fill"
             }
           ],
-          "hide": false,
           "measurement": "fping",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "refId": "B",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
           "resultFormat": "time_series",
           "select": [
             [
@@ -182,6 +148,18 @@
           ],
           "tags": [
             {
+              "key": "agent",
+              "operator": "=~",
+              "value": "/^$agent$/"
+            },
+            {
+              "condition": "AND",
+              "key": "group",
+              "operator": "=~",
+              "value": "/^$group$/"
+            },
+            {
+              "condition": "AND",
               "key": "fqdn",
               "operator": "=~",
               "value": "/^$host$/"
@@ -189,20 +167,25 @@
           ]
         },
         {
-          "alias": "max",
+          "alias": "Max",
           "groupBy": [
             {
               "params": [
                 "$__interval"
               ],
               "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
             }
           ],
-          "hide": true,
           "measurement": "fping",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "refId": "C",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
           "resultFormat": "time_series",
           "select": [
             [
@@ -214,7 +197,7 @@
               },
               {
                 "params": [],
-                "type": "max"
+                "type": "mean"
               }
             ]
           ],
@@ -226,6 +209,12 @@
             },
             {
               "condition": "AND",
+              "key": "group",
+              "operator": "=~",
+              "value": "/^$group$/"
+            },
+            {
+              "condition": "AND",
               "key": "fqdn",
               "operator": "=~",
               "value": "/^$host$/"
@@ -233,7 +222,7 @@
           ]
         },
         {
-          "alias": "loss",
+          "alias": "Min",
           "groupBy": [
             {
               "params": [
@@ -243,15 +232,69 @@
             },
             {
               "params": [
-                "none"
+                "null"
               ],
               "type": "fill"
             }
           ],
-          "hide": false,
           "measurement": "fping",
-          "orderByTime": "DESC",
-          "policy": "autogen",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "min"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "agent",
+              "operator": "=~",
+              "value": "/^$agent$/"
+            },
+            {
+              "condition": "AND",
+              "key": "group",
+              "operator": "=~",
+              "value": "/^$group$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fqdn",
+              "operator": "=~",
+              "value": "/^$host$/"
+            }
+          ]
+        },
+        {
+          "alias": "Loss",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "fping",
+          "orderByTime": "ASC",
+          "policy": "default",
           "refId": "D",
           "resultFormat": "time_series",
           "select": [
@@ -273,6 +316,12 @@
               "key": "agent",
               "operator": "=~",
               "value": "/^$agent$/"
+            },
+            {
+              "condition": "AND",
+              "key": "group",
+              "operator": "=~",
+              "value": "/^$group$/"
             },
             {
               "condition": "AND",
@@ -428,5 +477,5 @@
   "timezone": "",
   "title": "SmokePing",
   "uid": "snFn_iamz",
-  "version": 16
+  "version": 17
 }
