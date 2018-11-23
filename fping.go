@@ -58,11 +58,9 @@ func FPingProbe(config Config, result chan string, verbose bool) {
 	    stderr, err := cmd.StderrPipe()
 	    if err != nil {
     		log.Print(err)
-		continue
 	    }
 	    if err := cmd.Start(); err != nil {
     		log.Print(err)
-		continue
 	    }
 	    
     	    // Get results
@@ -85,6 +83,9 @@ func FPingProbe(config Config, result chan string, verbose bool) {
     		// Print result to channel
 		result <- fmt.Sprintf("%d %s %s %s %s %d %d %f %f %f %f",time.Now().Unix(), ip_group[Ip],"fping", ip_fqdn[Ip], Ip, PacketsSent, PacketsRecv, PacketsLoss, MinRtt, MaxRtt, AvgRtt)
 	    }
+	    // Stop process
+	    cmd.Wait()
+
 	    // Eval execute time
 	    end := time.Now().Unix()
 	    exectime := end - start
