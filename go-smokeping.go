@@ -1,20 +1,20 @@
-// 
 // Written by Romanenko Denys <romanenkodenys@gmail.com>
-//
 package main
 
 // Import section ----------------------------------------------------------------------------------------
 
-import (  
-    "github.com/BurntSushi/toml"
-    "fmt"
-    "flag"
-    "errors"
-    "log"
-    "os/signal"
-    "os"
-    "syscall"
+import (
+	"errors"
+	"flag"
+	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/BurntSushi/toml"
 )
+
 // Usage ------------------------------------------------------------------------------------------------
 var usage = `
 Usage:
@@ -30,7 +30,7 @@ type Config struct {
     Probes map[string] probe `toml:"probe"`
     Groups []group `toml:"group"`
 }
- 
+
 type globalTags struct {
     Project string
     Output string
@@ -47,7 +47,7 @@ type databaseConnector struct {
     Pass string
     Step int
 }
-  
+
 type host struct {
     Ip string
     Fqdn string
@@ -70,14 +70,15 @@ type probe struct {
 // Get command line parameters --------------------------------------------------------------------------
 func GetCommandLineArgs() (string,bool) {
     var (
-	configfile string
-	verbose bool
+        configfile string
+        verbose bool
     )
-// Get command line args
-    flag.StringVar(&configfile, "config","go-smokeping.toml","Config file locaion")
-    flag.BoolVar(&verbose, "verbose",false,"true/false")
+
+    // Get command line args
+    flag.StringVar(&configfile, "config", "go-smokeping.toml", "Config file locaion")
+    flag.BoolVar(&verbose, "verbose", false, "true/false")
     flag.Usage = func() {
-	fmt.Printf(usage)
+        fmt.Print(usage)
     }
     flag.Parse()
 
@@ -87,14 +88,14 @@ func GetCommandLineArgs() (string,bool) {
 // Return probe by name ---------------------------------------------------------------
 func GetProbe(config Config, probe_name string) (probe, error) {
     var(
-	 pr probe
-	 ok bool
+        pr probe
+        ok bool
     )
 
     if pr, ok = config.Probes[probe_name]; ok {
-	return pr, nil
+        return pr, nil
     } else {
-	return pr,errors.New("Probe "+probe_name+" not found")
+        return pr,errors.New("Probe " + probe_name + " not found")
     }
 }
 //-------------------------------------------------------------------------------------------------------
@@ -109,37 +110,37 @@ func SignalHandler(verbose bool) {
 }
 //-------------------------------------------------------------------------------------------------------
 
-func main() { 
-
+func main() {
     var (
-      config Config
-      verbose bool
+        config Config
+        verbose bool
     )
 
-// Get command line arguments
+    // Get command line arguments
     configfile, verbose := GetCommandLineArgs()
- 
-// Read config file
+
+    // Read config file
     if _, err := toml.DecodeFile(configfile, &config); err != nil {
-	log.Print(err)
-	return
+        log.Print(err)
+        return
     }
 
-// Create channels
+    // Create channels
     probe_output := make(chan string, 1024)
 
-// Run database outputs
-   switch config.Global_tags.Output {
-    case "influx":
-	go OutputInfluxDb(config.Global_tags.Project, config.Agent.Hostname, config.Database["influx"], probe_output, verbose)
+    // Run database outputs
+    switch config.Global_tags.Output {
+        case "influx":
+        go OutputInfluxDb(config.Global_tags.Project, config.Agent.Hostname, config.Database["influx"], probe_output, verbose)
     }
 
-// Run probes
+    // Run probes
     go PingProbe(config, probe_output, verbose)
     go FPingProbe(config, probe_output, verbose)
+    go TcpPingProbe(config, probe_output, verbose)
 
-//  Check system signals    
+    //  Check system signals
     SignalHandler(verbose)
 
-// End
+    // End
 }

@@ -1,6 +1,7 @@
 [global_tags]
 project = "Projectname"
-output ="influx"
+output = "influx"
+
 [agent]
 hostname = "agent_hostname"
 
@@ -38,3 +39,8 @@ name = "test2"
 	ip = "1.1.1.1"
 	fqdn = "ns.cloudflare.com"
 	probe = "icmp"
+
+    [[group.host]]
+	ip = "1.1.1.1"
+	fqdn = "ns.cloudflare.com"
+	probe = "tcpping"
